@@ -1,16 +1,22 @@
-# my_app
 
-A new Flutter project.
+## 🚀 การติดตั้งและการรัน
 
-## Getting Started
+1. **Clone หรือดาวน์โหลดโปรเจคนี้**
 
-This project is a starting point for a Flutter application.
+   ```bash
+   git clone https://github.com/Kittiphod-ka/MobileDev_68_65114540055.git
+   ```
+    ```bash
+   cd my_app
+    ```
 
-A few resources to get you started if this is your first Flutter project:
+2. **ติดตั้ง dependencies**
+   ```bash
+   flutter pub get
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+    ```
+3. **รันแอป**
+    ```bash
+   flutter run
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+    ```
