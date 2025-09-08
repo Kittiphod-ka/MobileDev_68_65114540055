@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/team_controller.dart';
 import 'team_preview_page.dart';
+import 'pokemon_detail_page.dart';
 
 class PokemonGrid extends StatelessWidget {
   final teamCtrl = Get.find<TeamController>();
@@ -129,14 +130,34 @@ class PokemonGrid extends StatelessWidget {
 
           Padding(
             padding: const EdgeInsets.all(12),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50)),
-              onPressed: () => Get.to(() => TeamPreviewPage()),
-              child: const Text("View My Team",
-                  style: TextStyle(fontSize: 18)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50)),
+                    onPressed: () => Get.to(() => TeamPreviewPage()),
+                    child: const Text("View My Team",
+                        style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+
+                const SizedBox(width: 12), // ระยะห่างระหว่างปุ่ม
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50)),
+                    onPressed: () {
+                      // 👉 ไปหน้าใหม่ (ตัวอย่าง AboutPage)
+                      Get.to(() => PokemonDetailPage());
+                    },
+                    child: const Text("About",
+                        style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ],
             ),
-          )
+          ),
         ],
       ),
     );
