@@ -7,7 +7,7 @@
    git clone https://github.com/Kittiphod-ka/MobileDev_68_65114540055.git
    ```
     ```bash
-   cd my_app
+   cd MobileDev_68_65114540055
     ```
 
 2. **ติดตั้ง dependencies**
