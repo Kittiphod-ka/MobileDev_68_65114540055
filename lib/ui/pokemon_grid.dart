@@ -5,38 +5,16 @@ import '../controllers/team_controller.dart';
 class PokemonGrid extends StatelessWidget {
   final teamCtrl = Get.find<TeamController>();
 
+  PokemonGrid({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final nameController = TextEditingController(text: teamCtrl.teamName.value);
+
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() => Text(teamCtrl.teamName.value)),
+        title: const Text("Create Your Team"),
         actions: [
-          // ✏️ Edit team name
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              final controller =
-                  TextEditingController(text: teamCtrl.teamName.value);
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text("Edit Team Name"),
-                  content: TextField(controller: controller),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text("Cancel")),
-                    ElevatedButton(
-                        onPressed: () {
-                          teamCtrl.editTeamName(controller.text);
-                          Navigator.pop(ctx);
-                        },
-                        child: const Text("Save")),
-                  ],
-                ),
-              );
-            },
-          ),
           // 🔗 Reset team
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -46,9 +24,26 @@ class PokemonGrid extends StatelessWidget {
       ),
       body: Column(
         children: [
+          // ✏️ กรอกชื่อทีม
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: "Team Name",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                teamCtrl.editTeamName(value);
+              },
+            ),
+          ),
+
           // 💡 Search bar
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: TextField(
               decoration: InputDecoration(
                 hintText: "Search Pokémon...",
@@ -66,7 +61,8 @@ class PokemonGrid extends StatelessWidget {
           Obx(() => Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.all(8),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.deepPurple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -153,7 +149,7 @@ class PokemonGrid extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 teamCtrl.saveTeam();
-                Get.back(); // กลับหน้า main หลังบันทึก
+                Get.back(); // กลับไปหน้า Main หลังบันทึก
                 Get.snackbar("Saved", "Your team has been saved!");
               },
               style: ElevatedButton.styleFrom(
