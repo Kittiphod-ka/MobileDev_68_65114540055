@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/team_controller.dart';
-import 'team_preview_page.dart';
-import 'pokemon_detail_page.dart';
 
 class PokemonGrid extends StatelessWidget {
   final teamCtrl = Get.find<TeamController>();
@@ -13,38 +11,42 @@ class PokemonGrid extends StatelessWidget {
       appBar: AppBar(
         title: Obx(() => Text(teamCtrl.teamName.value)),
         actions: [
+          // ✏️ Edit team name
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
               final controller =
                   TextEditingController(text: teamCtrl.teamName.value);
               showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                        title: const Text("Edit Team Name"),
-                        content: TextField(controller: controller),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text("Cancel")),
-                          ElevatedButton(
-                              onPressed: () {
-                                teamCtrl.editTeamName(controller.text);
-                                Navigator.pop(ctx);
-                              },
-                              child: const Text("Save")),
-                        ],
-                      ));
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Edit Team Name"),
+                  content: TextField(controller: controller),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text("Cancel")),
+                    ElevatedButton(
+                        onPressed: () {
+                          teamCtrl.editTeamName(controller.text);
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text("Save")),
+                  ],
+                ),
+              );
             },
           ),
+          // 🔗 Reset team
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: teamCtrl.resetTeam,
+            onPressed: teamCtrl.resetSelected,
           ),
         ],
       ),
       body: Column(
         children: [
+          // 💡 Search bar
           Padding(
             padding: const EdgeInsets.all(8),
             child: TextField(
@@ -54,10 +56,13 @@ class PokemonGrid extends StatelessWidget {
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
-              onChanged: (value) => teamCtrl.searchQuery.value = value,
+              onChanged: (value) {
+                teamCtrl.searchQuery.value = value.toLowerCase();
+              },
             ),
           ),
 
+          // 👥 Selected preview
           Obx(() => Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -66,36 +71,20 @@ class PokemonGrid extends StatelessWidget {
                   color: Colors.deepPurple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: teamCtrl.team.isEmpty
+                child: teamCtrl.selected.isEmpty
                     ? const Text("No Pokémon selected",
                         textAlign: TextAlign.center)
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: teamCtrl.team.map((poke) {
+                        children: teamCtrl.selected.map((poke) {
                           return Column(
                             children: [
-                              Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundImage: NetworkImage(poke["image"]!),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => teamCtrl.togglePokemon(poke),
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle),
-                                      padding: const EdgeInsets.all(2),
-                                      child: const Icon(Icons.close,
-                                          size: 14, color: Colors.white),
-                                    ),
-                                  ),
-                                ],
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundImage: NetworkImage(poke["image"]!),
                               ),
                               const SizedBox(height: 4),
-                              Text(poke["name"]!.capitalizeFirst ?? "",
+                              Text(poke["name"]!.capitalize ?? "",
                                   style: const TextStyle(fontSize: 12)),
                             ],
                           );
@@ -103,13 +92,14 @@ class PokemonGrid extends StatelessWidget {
                       ),
               )),
 
+          // 🟪 Pokémon Grid
           Expanded(
             child: Obx(() {
-              final filtered = teamCtrl.pokemons
-                  .where((p) => p["name"]!
-                      .toLowerCase()
-                      .contains(teamCtrl.searchQuery.value.toLowerCase()))
-                  .toList();
+              final filtered = teamCtrl.pokemons.where((p) {
+                return p["name"]!
+                    .toLowerCase()
+                    .contains(teamCtrl.searchQuery.value);
+              }).toList();
 
               return GridView.builder(
                 padding: const EdgeInsets.all(12),
@@ -122,133 +112,56 @@ class PokemonGrid extends StatelessWidget {
                 itemCount: filtered.length,
                 itemBuilder: (ctx, i) {
                   final poke = filtered[i];
-                  return PokemonCard(poke: poke);
+                  final selected = teamCtrl.selected
+                      .any((p) => p["name"] == poke["name"]);
+
+                  return GestureDetector(
+                    onTap: () => teamCtrl.togglePokemon(poke),
+                    child: AnimatedScale(
+                      scale: selected ? 0.95 : 1.0,
+                      duration: const Duration(milliseconds: 150),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: selected
+                                ? Colors.deepPurple
+                                : Colors.grey.shade300,
+                            width: selected ? 2.5 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.network(poke["image"]!,
+                                width: 60, height: 60),
+                            const SizedBox(height: 6),
+                            Text(poke["name"]!.capitalize ?? ""),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
                 },
               );
             }),
           ),
 
+          // 📥 Save team button
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50)),
-                    onPressed: () => Get.to(() => TeamPreviewPage()),
-                    child: const Text("View My Team",
-                        style: TextStyle(fontSize: 18)),
-                  ),
-                ),
-
-                const SizedBox(width: 12), // ระยะห่างระหว่างปุ่ม
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50)),
-                    onPressed: () {
-                      // 👉 ไปหน้าใหม่ (ตัวอย่าง AboutPage)
-                      Get.to(() => PokemonDetailPage());
-                    },
-                    child: const Text("About",
-                        style: TextStyle(fontSize: 18)),
-                  ),
-                ),
-              ],
+            child: ElevatedButton(
+              onPressed: () {
+                teamCtrl.saveTeam();
+                Get.back(); // กลับหน้า main หลังบันทึก
+                Get.snackbar("Saved", "Your team has been saved!");
+              },
+              style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50)),
+              child: const Text("Save Team"),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class PokemonCard extends StatefulWidget {
-  final Map<String, String> poke;
-  const PokemonCard({super.key, required this.poke});
-
-  @override
-  State<PokemonCard> createState() => _PokemonCardState();
-}
-
-class _PokemonCardState extends State<PokemonCard> {
-  bool isHovered = false;
-  bool isPressed = false;
-
-  final teamCtrl = Get.find<TeamController>();
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = teamCtrl.team
-        .any((p) => p["name"] == widget.poke["name"]);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => isPressed = true),
-        onTapUp: (_) {
-          setState(() => isPressed = false);
-          teamCtrl.togglePokemon(widget.poke);
-        },
-        onTapCancel: () => setState(() => isPressed = false),
-        child: AnimatedScale(
-          scale: isPressed ? 0.95 : (isHovered ? 1.05 : 1.0),
-          duration: const Duration(milliseconds: 150),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isHovered || selected
-                    ? Colors.deepPurple
-                    : Colors.grey.shade300,
-                width: isHovered || selected ? 2.5 : 1,
-              ),
-              boxShadow: isHovered
-                  ? [
-                      BoxShadow(
-                        color: Colors.deepPurple.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      )
-                    ]
-                  : [],
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.network(widget.poke["image"]!,
-                        width: 60, height: 60),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.poke["name"]!.capitalizeFirst ?? "",
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-                AnimatedOpacity(
-                  opacity: selected ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.check_circle,
-                        size: 40, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
